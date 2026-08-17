@@ -60,6 +60,27 @@ class TestStatisticalAnomalyDetector(unittest.TestCase):
         
         self.assertEqual(result.num_anomalies, 0)
         self.assertEqual(result.indices, [])
+
+    def test_rejects_non_numeric_data(self):
+        """Test non-numeric input fails with a clear error."""
+        detector = StatisticalAnomalyDetector()
+
+        with self.assertRaisesRegex(ValueError, "one-dimensional numeric sequence"):
+            detector.detect([1, "bad", 3])
+
+    def test_rejects_multidimensional_data(self):
+        """Test statistical detectors require a one-dimensional sequence."""
+        detector = StatisticalAnomalyDetector()
+
+        with self.assertRaisesRegex(ValueError, "one-dimensional numeric sequence"):
+            detector.detect(np.array([[1, 2], [3, 4]]))
+
+    def test_rejects_non_finite_values(self):
+        """Test NaN and infinite values are rejected before scoring."""
+        detector = StatisticalAnomalyDetector()
+
+        with self.assertRaisesRegex(ValueError, "finite numeric values"):
+            detector.detect([1, np.nan, 3])
         
     def test_summary_method(self):
         """Test result summary generation"""
