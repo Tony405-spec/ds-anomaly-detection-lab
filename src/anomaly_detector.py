@@ -28,13 +28,15 @@ class AnomalyResult:
     method: str
     threshold: float
     num_anomalies: int
+    total_observations: int = 0
     
     def summary(self) -> Dict:
         """Return summary statistics"""
         return {
             'method': self.method,
             'total_anomalies': self.num_anomalies,
-            'anomaly_rate': f"{self.num_anomalies / max(len(self.indices), 1) * 100:.2f}%" if self.indices else "0%",
+            'total_observations': self.total_observations,
+            'anomaly_rate': f"{self.num_anomalies / self.total_observations * 100:.2f}%" if self.total_observations else "0%",
             'max_score': max(self.scores) if self.scores else 0,
             'min_score': min(self.scores) if self.scores else 0
         }
@@ -69,7 +71,7 @@ class StatisticalAnomalyDetector:
             data = np.array(data)
             
         if len(data) == 0:
-            return AnomalyResult([], [], self.method.value, self.threshold, 0)
+            return AnomalyResult([], [], self.method.value, self.threshold, 0, 0)
         
         if self.method == DetectionMethod.ZSCORE:
             return self._zscore_detection(data)
@@ -86,7 +88,7 @@ class StatisticalAnomalyDetector:
         std = np.std(data)
         
         if std == 0:
-            return AnomalyResult([], [], self.method.value, self.threshold, 0)
+            return AnomalyResult([], [], self.method.value, self.threshold, 0, len(data))
         
         z_scores = np.abs((data - mean) / std)
         
@@ -99,18 +101,13 @@ class StatisticalAnomalyDetector:
         anomaly_indices = np.where(z_scores > adjusted_threshold)[0].tolist()
         anomaly_scores = z_scores[anomaly_indices].tolist()
         
-        # For debugging - print info if anomalies found
-        if anomaly_indices and len(data) < 20:
-            print(f"Debug: Found {len(anomaly_indices)} anomalies with threshold {adjusted_threshold}")
-            print(f"  Max Z-score: {max(z_scores):.2f}")
-            print(f"  Mean: {mean:.2f}, Std: {std:.2f}")
-        
         return AnomalyResult(
             indices=anomaly_indices,
             scores=anomaly_scores,
             method=self.method.value,
             threshold=adjusted_threshold,
-            num_anomalies=len(anomaly_indices)
+            num_anomalies=len(anomaly_indices),
+            total_observations=len(data)
         )
     
     def _iqr_detection(self, data: np.ndarray) -> AnomalyResult:
@@ -133,7 +130,8 @@ class StatisticalAnomalyDetector:
             scores=scores,
             method=self.method.value,
             threshold=self.threshold,
-            num_anomalies=len(anomaly_indices)
+            num_anomalies=len(anomaly_indices),
+            total_observations=len(data)
         )
     
     def _mad_detection(self, data: np.ndarray) -> AnomalyResult:
@@ -142,7 +140,7 @@ class StatisticalAnomalyDetector:
         mad = np.median(np.abs(data - median))
         
         if mad == 0:
-            return AnomalyResult([], [], self.method.value, self.threshold, 0)
+            return AnomalyResult([], [], self.method.value, self.threshold, 0, len(data))
         
         modified_z_scores = 0.6745 * (data - median) / mad
         anomaly_indices = np.where(np.abs(modified_z_scores) > self.threshold)[0].tolist()
@@ -153,7 +151,8 @@ class StatisticalAnomalyDetector:
             scores=anomaly_scores,
             method=self.method.value,
             threshold=self.threshold,
-            num_anomalies=len(anomaly_indices)
+            num_anomalies=len(anomaly_indices),
+            total_observations=len(data)
         )
 
 class AdvancedAnomalyDetector:
@@ -196,5 +195,6 @@ class AdvancedAnomalyDetector:
             scores=scores,
             method="isolation_forest",
             threshold=contamination,
-            num_anomalies=len(anomaly_indices)
+            num_anomalies=len(anomaly_indices),
+            total_observations=len(data)
         )
