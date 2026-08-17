@@ -65,8 +65,7 @@ class StatisticalAnomalyDetector:
         Returns:
             AnomalyResult object containing detection results
         """
-        if isinstance(data, list):
-            data = np.array(data)
+        data = self._prepare_data(data)
             
         if len(data) == 0:
             return AnomalyResult([], [], self.method.value, self.threshold, 0)
@@ -79,6 +78,21 @@ class StatisticalAnomalyDetector:
             return self._mad_detection(data)
         else:
             raise ValueError(f"Method {self.method} not implemented")
+
+    def _prepare_data(self, data: Union[List[float], np.ndarray]) -> np.ndarray:
+        """Return validated one-dimensional numeric data."""
+        try:
+            data_array = np.asarray(data, dtype=float)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("data must be a one-dimensional numeric sequence") from exc
+
+        if data_array.ndim != 1:
+            raise ValueError("data must be a one-dimensional numeric sequence")
+
+        if not np.all(np.isfinite(data_array)):
+            raise ValueError("data must contain only finite numeric values")
+
+        return data_array
     
     def _zscore_detection(self, data: np.ndarray) -> AnomalyResult:
         """Z-score based detection (3-sigma rule)"""
