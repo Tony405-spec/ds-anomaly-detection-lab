@@ -23,6 +23,13 @@ class TestStatisticalAnomalyDetector(unittest.TestCase):
         self.empty_data = []
         # Data with subtle anomaly
         self.subtle_anomaly = [10, 10, 10, 10, 100, 10, 10, 10, 10]
+
+    def test_detection_method_enum_only_lists_implemented_methods(self):
+        """Test public statistical method enum does not advertise unsupported methods."""
+        self.assertEqual(
+            {method.value for method in DetectionMethod},
+            {"zscore", "iqr", "mad"},
+        )
         
     def test_zscore_detection(self):
         """Test Z-score method identifies outliers correctly"""

@@ -18,7 +18,6 @@ class DetectionMethod(Enum):
     ZSCORE = "zscore"
     IQR = "iqr"
     MAD = "mad"  # Median Absolute Deviation
-    DBSCAN = "dbscan"
 
 @dataclass
 class AnomalyResult:
