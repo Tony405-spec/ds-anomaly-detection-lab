@@ -99,12 +99,6 @@ class StatisticalAnomalyDetector:
         anomaly_indices = np.where(z_scores > adjusted_threshold)[0].tolist()
         anomaly_scores = z_scores[anomaly_indices].tolist()
         
-        # For debugging - print info if anomalies found
-        if anomaly_indices and len(data) < 20:
-            print(f"Debug: Found {len(anomaly_indices)} anomalies with threshold {adjusted_threshold}")
-            print(f"  Max Z-score: {max(z_scores):.2f}")
-            print(f"  Mean: {mean:.2f}, Std: {std:.2f}")
-        
         return AnomalyResult(
             indices=anomaly_indices,
             scores=anomaly_scores,

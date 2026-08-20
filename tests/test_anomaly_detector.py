@@ -35,6 +35,19 @@ class TestStatisticalAnomalyDetector(unittest.TestCase):
         self.assertTrue(result.num_anomalies >= 1)  # Should find at least 1 outlier
         # The outlier should be at index 4 (the value 200)
         self.assertIn(4, result.indices)
+
+    def test_zscore_detection_does_not_print_debug_output(self):
+        """Test detection does not write debug text to stdout."""
+        from contextlib import redirect_stdout
+        from io import StringIO
+
+        detector = StatisticalAnomalyDetector(method=DetectionMethod.ZSCORE, threshold=2.5)
+        stdout = StringIO()
+
+        with redirect_stdout(stdout):
+            detector.detect(self.data_with_outlier)
+
+        self.assertEqual(stdout.getvalue(), "")
         
     def test_iqr_detection(self):
         """Test IQR method identifies outliers"""
