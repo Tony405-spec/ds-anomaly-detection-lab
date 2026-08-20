@@ -1,0 +1,23 @@
+[project]
+name = "ds-anomaly-detection-lab"
+version = "0.1.0"
+description = "Statistical and machine-learning anomaly detection examples for time-series data."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+]
+
+[project.optional-dependencies]
+ml = [
+    "scikit-learn",
+]
+test = [
+    "pytest",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
