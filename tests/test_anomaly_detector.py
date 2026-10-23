@@ -5,6 +5,8 @@ Unit tests for anomaly detection module.
 import unittest
 import sys
 import os
+import contextlib
+import io
 import numpy as np
 
 # Add src to path
@@ -69,7 +71,33 @@ class TestStatisticalAnomalyDetector(unittest.TestCase):
         
         self.assertIn('method', summary)
         self.assertIn('total_anomalies', summary)
+        self.assertIn('total_observations', summary)
         self.assertIn('anomaly_rate', summary)
+        self.assertEqual(summary['total_observations'], len(self.data_with_outlier))
+        self.assertEqual(summary['anomaly_rate'], "11.11%")
+
+    def test_summary_rate_uses_total_observations(self):
+        """Test anomaly rate uses the full evaluated population."""
+        result = AnomalyResult(
+            indices=[2, 5],
+            scores=[3.1, 4.2],
+            method="zscore",
+            threshold=3.0,
+            num_anomalies=2,
+            total_observations=10,
+        )
+
+        self.assertEqual(result.summary()["anomaly_rate"], "20.00%")
+
+    def test_zscore_detection_does_not_print_debug_output(self):
+        """Test library detection stays quiet during normal calls."""
+        detector = StatisticalAnomalyDetector(method=DetectionMethod.ZSCORE, threshold=2.5)
+        buffer = io.StringIO()
+
+        with contextlib.redirect_stdout(buffer):
+            detector.detect(self.data_with_outlier)
+
+        self.assertEqual(buffer.getvalue(), "")
         
     def test_constant_data(self):
         """Test detection on constant data (no variance)"""
